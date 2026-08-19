@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Projetos da Equipe</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandOrange: '#ff5510',
+                        lightBg: '#f8fafc',
+                        cardBg: '#ffffff'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+
+        /* Suaviza transições */
+        .project-form {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        .project-form.active {
+            max-height: 500px; /* Suficiente para o form */
+            opacity: 1;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-10 text-center flex flex-col items-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-1">Painel de <span class="text-brandOrange">Projetos</span></h1>
+            <p class="text-gray-500">Gerenciamento de alocações da equipe</p>
+        </header>
+
+        <main>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
+                        <thead class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase tracking-wider font-semibold">
+                            <tr>
+                                <th class="p-4 w-1/4">Colaborador</th>
+                                <th class="p-4 w-1/6">Função</th>
+                                <th class="p-4 w-5/12">Projeto Atual</th>
+                                <th class="p-4 w-28 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="collaborators-table-body" class="divide-y divide-gray-100">
+                            <!-- Colaboradores aparecerão aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Dados dos colaboradores atualizados para suportar múltiplos projetos
+        const collaborators = [
+            { id: 1, name: 'Anna Karla', role: 'Analista', projects: [] },
+            { id: 2, name: 'Samia Beatriz', role: 'Analista', projects: [] },
+            { id: 3, name: 'Gustavo Basse', role: 'Analista', projects: [] },
+            { id: 4, name: 'Camila Moreira', role: 'Analista', projects: [] },
+            { id: 5, name: 'Juliane Pereira', role: 'Analista', projects: [] },
+            { id: 6, name: 'Isabella Tironni', role: 'Anjo', projects: [] },
+            { id: 7, name: 'Bianca Mendonça', role: 'Anjo', projects: [] },
+            { id: 8, name: 'Kátia Bandeira', role: 'Anjo', projects: [] },
+            { id: 9, name: 'Allex Costa', role: 'Anjo', projects: [] }
+        ];
+
+        const tableBody = document.getElementById('collaborators-table-body');
+
+        // Função auxiliar para definir as cores do Status
+        function getStatusColorClass(status) {
+            switch (status) {
+                case 'Em andamento': return 'bg-blue-100 text-blue-700 border-blue-200';
+                case 'Finalizado': return 'bg-green-100 text-green-700 border-green-200';
+                case 'Stand By': return 'bg-amber-100 text-amber-700 border-amber-200';
+                default: return 'bg-gray-100 text-gray-700 border-gray-200';
+            }
+        }
+
+        // Função para atualizar o status diretamente pela lista
+        function updateProjectStatus(colabId, projectId, newStatus) {
+            const colab = collaborators.find(c => c.id === colabId);
+            if (colab) {
+                const proj = colab.projects.find(p => p.id === projectId);
+                if (proj) {
+                    proj.status = newStatus;
+                    renderDashboard(); // Atualiza a tela para refletir a nova cor
+                }
+            }
+        }
+
+        // Função para renderizar a interface em formato de tabela
+        function renderDashboard() {
+            tableBody.innerHTML = ''; // Limpa o corpo da tabela
+
+            collaborators.forEach(colab => {
+                // Linha principal de dados
+                const trData = document.createElement('tr');
+                trData.className = 'hover:bg-gray-50 transition-colors group';
+
+                // Coluna Nome
+                const tdName = document.createElement('td');
+                tdName.className = 'p-4 font-medium text-gray-800 align-top pt-5';
+                tdName.innerText = colab.name;
+
+                // Coluna Função
+                const tdRole = document.createElement('td');
+                tdRole.className = 'p-4 align-top pt-5';
+                tdRole.innerHTML = `<span class="inline-block px-3 py-1 rounded-full text-xs font-medium ${colab.role === 'Analista' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'} border border-transparent">${colab.role}</span>`;
+
+                // Coluna Projetos
+                const tdProject = document.createElement('td');
+                tdProject.className = 'p-4 align-top';
+                if (colab.projects && colab.projects.length > 0) {
+                    let projectsHtml = '<div class="space-y-2">';
+                    colab.projects.forEach(proj => {
+                        const hasDescription = proj.description && proj.description !== 'Sem descrição.';
+                        const statusColor = getStatusColorClass(proj.status);
+                        
+                        projectsHtml += `
+                            <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-lg shadow-sm group/item">
+                                <div class="flex items-center gap-3 flex-wrap">
+                                    <span class="font-medium text-gray-800 text-sm">${proj.name}</span>
+                                    
+                                    <!-- Select de Status Interativo (Badge) -->
+                                    <select onchange="updateProjectStatus(${colab.id}, ${proj.id}, this.value)" class="text-[11px] rounded-full px-2 py-0.5 border cursor-pointer font-medium outline-none transition-colors hover:shadow-sm focus:ring-1 focus:ring-brandOrange ${statusColor}">
+                                        <option value="Em andamento" ${proj.status === 'Em andamento' ? 'selected' : ''}>Em andamento</option>
+                                        <option value="Stand By" ${proj.status === 'Stand By' ? 'selected' : ''}>Stand By</option>
+                                        <option value="Finalizado" ${proj.status === 'Finalizado' ? 'selected' : ''}>Finalizado</option>
+                                    </select>
+                                    
+                                    ${hasDescription ? `
+                                    <div class="relative group/tooltip flex items-center">
+                                        <!-- Ícone ! -->
+                                        <div class="w-5 h-5 rounded-full bg-gray-100 text-gray-500 border border-gray-200 flex items-center justify-center text-[11px] font-bold cursor-help hover:bg-brandOrange hover:text-white hover:border-brandOrange transition-colors shadow-sm">!</div>
+                                        
+                                        <!-- Caixinha Flutuante (Tooltip) -->
+                                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2.5 bg-gray-800 text-white text-xs rounded-md shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-50 pointer-events-none font-normal leading-relaxed text-center break-words">
+                                            ${proj.description}
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                <button onclick="removeProject(${colab.id}, ${proj.id})" class="text-gray-300 hover:text-red-500 p-1 opacity-0 group-hover/item:opacity-100 transition-opacity ml-2 shrink-0" title="Remover projeto">
+                                    <i class="fas fa-times text-sm"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    projectsHtml += '</div>';
+                    tdProject.innerHTML = projectsHtml;
+                } else {
+                    tdProject.innerHTML = `<span class="text-gray-400 italic text-sm block pt-1">Nenhum projeto atribuído</span>`;
+                }
+
+                // Coluna Ações
+                const tdAction = document.createElement('td');
+                tdAction.className = 'p-4 text-center align-top pt-4';
+                tdAction.innerHTML = `
+                    <button onclick="toggleForm(${colab.id})" class="w-8 h-8 rounded-full bg-orange-50 hover:bg-brandOrange hover:text-white text-brandOrange flex items-center justify-center transition-all shadow-sm border border-orange-100 hover:border-transparent mx-auto" title="Adicionar Projeto">
+                        <i class="fas fa-plus text-sm"></i>
+                    </button>
+                `;
+
+                trData.appendChild(tdName);
+                trData.appendChild(tdRole);
+                trData.appendChild(tdProject);
+                trData.appendChild(tdAction);
+                tableBody.appendChild(trData);
+
+                // Linha oculta para o Formulário (Agora com campo de status)
+                const trForm = document.createElement('tr');
+                trForm.id = `row-form-${colab.id}`;
+                trForm.className = 'hidden bg-orange-50/30 transition-all';
+                
+                const tdForm = document.createElement('td');
+                tdForm.colSpan = 4;
+                tdForm.className = 'p-0 border-b border-gray-100'; 
+                
+                tdForm.innerHTML = `
+                    <div class="p-3 md:p-4 border-l-4 border-brandOrange mx-2 md:mx-4 my-2 md:my-3 bg-white rounded shadow-sm flex flex-col lg:flex-row gap-3 items-start lg:items-center">
+                        <div class="flex-1 w-full">
+                            <input type="text" id="proj-name-${colab.id}" placeholder="Nome do Projeto (Ex: Redesign do Site)" class="w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-brandOrange focus:bg-white transition-colors">
+                        </div>
+                        <div class="flex-1 w-full">
+                            <input type="text" id="proj-desc-${colab.id}" placeholder="Breve descrição da tarefa..." class="w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-brandOrange focus:bg-white transition-colors">
+                        </div>
+                        <div class="w-full lg:w-40 shrink-0">
+                            <select id="proj-status-${colab.id}" class="w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-brandOrange focus:bg-white transition-colors cursor-pointer">
+                                <option value="Em andamento">Em andamento</option>
+                                <option value="Stand By">Stand By</option>
+                                <option value="Finalizado">Finalizado</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center justify-end space-x-2 w-full lg:w-auto shrink-0">
+                            <button onclick="toggleForm(${colab.id})" class="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">Cancelar</button>
+                            <button onclick="saveProject(${colab.id})" class="px-4 py-2 text-xs bg-brandOrange hover:bg-orange-600 text-white font-medium rounded-md transition-colors shadow-sm whitespace-nowrap">Salvar Projeto</button>
+                        </div>
+                    </div>
+                `;
+                trForm.appendChild(tdForm);
+                tableBody.appendChild(trForm);
+            });
+        }
+
+        // Função para mostrar/esconder a linha de formulário na tabela
+        function toggleForm(id) {
+            const formRow = document.getElementById(`row-form-${id}`);
+            
+            // Fecha todos os outros forms abertos antes de abrir este
+            document.querySelectorAll('tr[id^="row-form-"]').forEach(el => {
+                if(el.id !== `row-form-${id}`) el.classList.add('hidden');
+            });
+            
+            if (formRow) {
+                formRow.classList.toggle('hidden');
+                // Foco automático no input ao abrir
+                if (!formRow.classList.contains('hidden')) {
+                    setTimeout(() => {
+                        const input = document.getElementById(`proj-name-${id}`);
+                        if(input) input.focus();
+                    }, 50);
+                }
+            }
+        }
+
+        // Função para salvar um projeto
+        function saveProject(id) {
+            const nameInput = document.getElementById(`proj-name-${id}`).value.trim();
+            const descInput = document.getElementById(`proj-desc-${id}`).value.trim();
+            const statusInput = document.getElementById(`proj-status-${id}`).value;
+
+            if (!nameInput) {
+                // Simples feedback visual se o nome estiver vazio
+                document.getElementById(`proj-name-${id}`).classList.add('border-red-500');
+                setTimeout(() => {
+                    document.getElementById(`proj-name-${id}`).classList.remove('border-red-500');
+                }, 2000);
+                return;
+            }
+
+            // Atualiza os dados locais adicionando um novo projeto ao array
+            const colabIndex = collaborators.findIndex(c => c.id === id);
+            if (colabIndex !== -1) {
+                collaborators[colabIndex].projects.push({
+                    id: Date.now(), // ID único baseado no tempo para facilitar a exclusão
+                    name: nameInput,
+                    description: descInput || 'Sem descrição.',
+                    status: statusInput // Salva o status escolhido
+                });
+                renderDashboard(); // Re-renderiza a tela (isso fecha o formulário automaticamente)
+            }
+        }
+
+        // Função para remover um projeto específico de um colaborador
+        function removeProject(colabId, projectId) {
+            const colabIndex = collaborators.findIndex(c => c.id === colabId);
+            if (colabIndex !== -1) {
+                // Filtra removendo apenas o projeto com o ID correspondente
+                collaborators[colabIndex].projects = collaborators[colabIndex].projects.filter(p => p.id !== projectId);
+                renderDashboard();
+            }
+        }
+
+        // Inicializa a tela
+        renderDashboard();
+    </script>
+</body>
+</html>
